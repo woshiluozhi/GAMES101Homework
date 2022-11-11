@@ -69,6 +69,7 @@ int main(){
     0,1,2,
     0,0,1;
     std::cout << "after rotation and translation, the point p is in : \n" << Mt * Mr * p << std::endl;
+    //http://t.csdn.cn/3Jh0u
 
     return 0;
 }
