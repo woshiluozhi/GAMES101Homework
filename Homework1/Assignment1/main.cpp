@@ -12,10 +12,10 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 
     Eigen::Matrix4f translate;
     translate << 
-        1, 0, 0, -eye_pos[0], 
-        0, 1, 0, -eye_pos[1], 
-        0, 0, 1, -eye_pos[2], 
-        0, 0, 0, 1;
+    1, 0, 0, -eye_pos[0], 
+    0, 1, 0, -eye_pos[1], 
+    0, 0, 1, -eye_pos[2], 
+    0, 0, 0, 1;
 
     view = translate * view;
 
@@ -25,20 +25,22 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 Eigen::Matrix4f get_model_matrix(float rotation_angle)
 {
     Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-    Eigen::Matrix4f rotation;
-    rotation <<
-        cos(rotation_angle / 180.0 * acos(-1)), -sin(rotation_angle / 180.0 * acos(-1)), 0, 0,
-        sin(rotation_angle / 180.0 * acos(-1)), cos(rotation_angle / 180.0 * acos(-1)), 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1;
-        
-    
 
+    float theta = rotation_angle / 180.0 * MY_PI; 
+
+    Eigen::Matrix4f rotation;
+    rotation << 
+    cos(theta), -sin(theta), 0, 0,
+    sin(theta), cos(theta), 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1;
+
+    model *= rotation;
     // TODO: Implement this function
     // Create the model matrix for rotating the triangle around the Z axis.
     // Then return it.
 
-    return rotation * model;
+    return model;
 }
 
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
@@ -47,36 +49,38 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     // Students will implement this function
 
     Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
-    Eigen::Matrix4f Mp;
-    Mp <<
-        zNear, 0, 0, 0,
-        0, zNear, 0, 0,
-        0, 0, zNear + zFar, -zNear * zFar,
-        0, 0, 1, 0;
-
-    float fovY = eye_fov / 180.0 * acos(-1);
-    float top = tan(fovY/2.0) * (-zNear);
-    float bottom = -top;
-    float right = top * aspect_ratio;
-    float left = -right;
-    Eigen::Matrix4f Mt;
-    Mt <<
-        1, 0, 0, -(left + right) / 2,
-        0, 1, 0, -(top + bottom) / 2,
-        0, 0, 1, -(zNear + zFar) / 2,
-        0, 0, 0, 1;
-    Eigen::Matrix4f Ms;
-    Ms <<
-        2 / (right - left), 0, 0, 0,
-        0, 2 / (top - bottom), 0, 0,
-        0, 0, 2 / (zNear - zFar), 0,
-        0, 0, 0, 1;
-
     // TODO: Implement this function
     // Create the projection matrix for the given parameters.
     // Then return it.
 
-    return Ms*Mt*Mp*projection;
+    //float t = - tan((eye_fov / 360.0) * acos(-1)) * zNear;//t is negative?
+    float t =  tan((eye_fov / 360.0) * acos(-1)) * zNear;
+    float r = t / aspect_ratio;
+
+    Eigen::Matrix4f perspective;
+    perspective << 
+    zNear, 0, 0, 0,
+    0, zNear, 0, 0,
+    0, 0, zNear + zFar, -zNear * zFar,
+    0, 0, 1, 0;
+
+    Eigen::Matrix4f translate;
+    translate <<
+    1,0,0,0,//-(r + l) / 2
+    0,1,0,0,//-(t + b) / 2
+    0,0,1,-(zNear + zFar)/2,
+    0,0,0,1;
+
+    Eigen::Matrix4f scale;
+    scale << 
+    1/r,0,0,0,//2 / (r - l)
+    0,1/t,0,0,//2 / (t - b)
+    0,0,2/(zNear-zFar),0,
+    0,0,0,1;
+
+    projection *= scale * translate * perspective;
+
+    return projection;
 }
 
 int main(int argc, const char** argv)
