@@ -67,7 +67,7 @@ static bool insideTriangle(float x, float y, const Vector3f* _v)
     //return (ap.cross(ab)).dot(bp.cross(bc)) > 0 && (bp.cross(bc)).dot(cp.cross(ca)) > 0 && (cp.cross(ca)).dot(ap.cross(ab)) > 0; 
     return ap.cross(ab).dot(bp.cross(bc)) > 0 && bp.cross(bc).dot(cp.cross(ca)) > 0; 
 }
-
+//
 // // 判断像素是否在三角形内，把参数改成了float
 // static bool insideTriangle(float x, float y, const Vector3f* _v)
 // {   
