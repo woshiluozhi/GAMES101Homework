@@ -31,36 +31,37 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
 {
     // TODO: Copy-paste your implementation from the previous assignment.
-    Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
-
-    Eigen::Matrix4f Mp;
-    Mp <<
-        zNear, 0, 0, 0,
-        0, zNear, 0, 0,
-        0, 0, zNear + zFar, -zNear * zFar,
-        0, 0, 1, 0;
-    float fovY = eye_fov / 180.0 * acos(-1);
-    float top = tan(fovY / 2) * (-zNear);
-    float bottom = -top;
-    float right = aspect_ratio * top;
-    float left = -right;
-
-    Eigen::Matrix4f Mt;
-    Mt <<
-        1, 0, 0, -(right + left) / 2,
-        0, 1, 0, -(top + bottom) / 2,
-        0, 0, 1, -(zNear + zFar) / 2,
-        0, 0, 0, 1;
-
-    Eigen::Matrix4f Ms;
-    Ms <<
-        2 / (right - left), 0, 0, 0,
-        0, 2 / (top - bottom), 0, 0,
-        0, 0, 2 / (zNear - zFar), 0,
-        0, 0, 0, 1;
+    Eigen::Matrix4f projection;
 
 
-    projection = Ms * Mt * Mp * projection;
+    float t = - tan((eye_fov / 360.0) * acos(-1)) * zNear;//t is negative?
+    //float t =  tan((eye_fov / 360.0) * acos(-1)) * zNear;
+    float r = t / aspect_ratio;
+
+    Eigen::Matrix4f perspective;
+    perspective << 
+    zNear, 0, 0, 0,
+    0, zNear, 0, 0,
+    0, 0, zNear + zFar, -zNear * zFar,
+    0, 0, 1, 0;
+
+    Eigen::Matrix4f translate;
+    translate <<
+    1,0,0,0,//-(r + l) / 2
+    0,1,0,0,//-(t + b) / 2
+    0,0,1,-(zNear + zFar)/2,
+    0,0,0,1;
+
+    Eigen::Matrix4f scale;
+    scale << 
+    1/r,0,0,0,//2 / (r - l)
+    0,1/t,0,0,//2 / (t - b)
+    0,0,2/(zNear-zFar),0,
+    0,0,0,1;
+
+    projection = scale * translate * perspective * projection;
+
+
     return projection;
 }
 
