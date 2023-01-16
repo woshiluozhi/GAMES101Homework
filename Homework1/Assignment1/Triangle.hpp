@@ -21,9 +21,9 @@ class Triangle
     // Texture *tex;
     Triangle();
 
-    Vector3f a() const { return v[0]; }
-    Vector3f b() const { return v[1]; }
-    Vector3f c() const { return v[2]; }
+    Eigen::Vector3f a() const { return v[0]; }
+    Eigen::Vector3f b() const { return v[1]; }
+    Eigen::Vector3f c() const { return v[2]; }
 
     void setVertex(int ind, Vector3f ver); /*set i-th vertex coordinates */
     void setNormal(int ind, Vector3f n);   /*set i-th vertex normal vector*/
