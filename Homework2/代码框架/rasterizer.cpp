@@ -40,43 +40,18 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 }
 
 
-static bool insideTriangle(float x, float y, const Vector3f* _v)
+static bool insideTriangle(int x, int y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
-
-    //Error Code!!!
-    // Vector2f ap(x - _v[0].x(), y - _v[0].y()); 
-    // Vector2f bp(x - _v[1].x(), y - _v[1].y()); 
-    // Vector2f cp(x - _v[2].x(), y - _v[2].y()); 
-    // Vector2f ab(_v[1].x() - _v[0].x(), _v[1].y() - _v[0].y()); 
-    // Vector2f bc(_v[2].x() - _v[1].x(), _v[2].x() - _v[1].y()); 
-    // Vector2f ca(_v[0].x() - _v[2].x(), _v[0].x() - _v[2].y());
-
     Vector3f p(x, y, 0);
-    Vector3f ap(p - _v[0]); 
-    Vector3f bp(p - _v[1]); 
-    Vector3f cp(p - _v[2]); 
-    Vector3f ab(_v[1] - _v[0]); 
-    Vector3f bc(_v[2] - _v[1]); 
+    Vector3f ap(p - _v[0]);
+    Vector3f bp(p - _v[1]);
+    Vector3f cp(p - _v[2]);
+    Vector3f ab(_v[1] - _v[0]);
+    Vector3f bc(_v[2] - _v[1]);
     Vector3f ca(_v[0] - _v[2]);
-
-    // Vector3f p(x, y, 0);
-    // Vector3f ap = p - _v[0], bp = p - _v[1], cp = p - _v[2], ab = _v[1] - _v[0], bc = _v[2] - _v[1], ca = _v[0] - _v[2]; 
-
-
-    //return (ap.cross(ab)).dot(bp.cross(bc)) > 0 && (bp.cross(bc)).dot(cp.cross(ca)) > 0 && (cp.cross(ca)).dot(ap.cross(ab)) > 0; 
-    return ap.cross(ab).dot(bp.cross(bc)) > 0 && bp.cross(bc).dot(cp.cross(ca)) > 0; 
+    return ab.cross(ap).dot(bc.cross(bp)) > 0 && bc.cross(bp).dot(ca.cross(cp)) > 0; 
 }
-//
-// // 判断像素是否在三角形内，把参数改成了float
-// static bool insideTriangle(float x, float y, const Vector3f* _v)
-// {   
-//     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
-//     Vector3f q(x, y, 0);
-//     Vector3f ab = _v[1] - _v[0], bc = _v[2] - _v[1], ca = _v[0] - _v[2];
-//     Vector3f aq = q - _v[0], bq = q - _v[1], cq = q - _v[2];
-//     return ab.cross(aq).dot(bc.cross(bq)) > 0 && ab.cross(aq).dot(ca.cross(cq)) > 0 && bc.cross(bq).dot(ca.cross(cq)) > 0;// 判断两两方向是否相同
-// }
 
 static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
 {
@@ -140,28 +115,48 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();
     
     // TODO : Find out the bounding box of current triangle.
+    // iterate through the pixel and find if the current pixel is inside the triangle
     int x_min1 = v[0].x() < v[1].x() ? v[0].x() : v[1].x();
     int x_min = x_min1 < v[2].x() ? x_min1 : v[2].x();
+
+    int y_min1 = v[0].y() < v[1].y() ? v[0].y() : v[1].y();
+    int y_min = y_min1 < v[2].y() ? y_min1 : v[2].y();
 
     int x_max1 = v[0].x() > v[1].x() ? v[0].x() : v[1].x();
     int x_max = x_max1 > v[2].x() ? x_max1 : v[2].x();
 
-    int y_min1 = v[0].y() < v[1].y() ? v[0].y() : v[1].y();
-    int y_min = y_min1 < v[2].y() ? y_min1 : v[2].y();
-    
     int y_max1 = v[0].y() > v[1].y() ? v[0].y() : v[1].y();
     int y_max = y_max1 > v[2].y() ? y_max1 : v[2].y();
 
 
-    // iterate through the pixel and find if the current pixel is inside the triangle
+    // for(int x = x_min; x <= x_max; x++)
+    // {
+    //     for(int y = y_min; y <= y_max; y++)
+    //     {
+    //         if(insideTriangle(x + 0.5, y + 0.5, t.v))
+    //         {
+    //                 auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
+    //                 float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+    //                 float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+    //                 z_interpolated *= w_reciprocal;
 
-    for (int x = x_min; x <= x_max; x++)
+    //                 if(z_interpolated < depth_buf[get_index(x, y)])
+    //                 {
+    //                     depth_buf[get_index(x, y)] = z_interpolated;
+    //                     Vector3f point((float)x, (float)y, z_interpolated);
+    //                     Vector3f color = t.getColor();
+    //                     set_pixel(point, color);
+    //                 }
+    //         }
+    //     }
+    // }
+        for (int x = x_min; x <= x_max; x++)
     {
         for (int y = y_min; y <= y_max; y++)
         {
             //imag[x][y] = insideTriangle(x + 0.5, y + 0.5, t.v);
 
-            if (insideTriangle(x + 0.5, y + 0.5, t.v))
+            if (insideTriangle(x + 0, y + 0, t.v))
             {
                 
                 auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
@@ -180,40 +175,12 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
             }
         }
     }
-
-
-    //     // Bounding Box
-    // int min_x = std::min(v[0].x(), std::min(v[1].x(), v[2].x())), min_y = std::min(v[0].y(), std::min(v[1].y(), v[2].y())), max_x = std::max(v[0].x(), std::max(v[1].x(), v[2].x())), max_y = std::max(v[0].y(), std::max(v[1].y(), v[2].y()));
-
-    //     // 采样
-    // for(int x = min_x; x <= max_x; x++)
-    //     for (int y = min_y; y <= max_y; y++)
-    //     {
-    //         if (insideTriangle(x + 0.5, y + 0.5, t.v))
-    //         {
-    //             // Z-Buffer算法
-    //             // 获取当前像素的深度
-    //             auto tmp = computeBarycentric2D(x + 0.5, y + 0.5, t.v);
-    //             float alpha, beta, gamma;
-    //             std::tie(alpha, beta, gamma) = tmp;
-    //             float w_reciprocal = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-    //             float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-    //             z_interpolated *= w_reciprocal;
-    //             // 深度测试
-    //             if (z_interpolated < depth_buf[get_index(x, y)])// 当前像素在前面
-    //             {
-    //                 depth_buf[get_index(x, y)] = z_interpolated;// 更新深度缓存
-    //                 Vector3f point = { (float)x,(float) y, z_interpolated }, color = t.getColor();
-    //                 set_pixel(point, color);
-    //             }
-    //         }
-    //     }
-    
     // If so, use the following code to get the interpolated z value.
-    // auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
-    // float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-    // float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-    // z_interpolated *= w_reciprocal;
+    //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
+    //float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+    //float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+    //z_interpolated *= w_reciprocal;
+
 
     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
 }
