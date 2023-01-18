@@ -52,33 +52,33 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float z
     // TODO: Use the same projection matrix from the previous assignments
     Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
 
-    Eigen::Matrix4f Mp;
-    Mp <<
-        zNear, 0, 0, 0,
-        0, zNear, 0, 0,
-        0, 0, zNear + zFar, -(zNear * zFar),
-        0, 0, 1, 0;
-    float fovY = eye_fov / 180.0 * acos(-1);
-    float top = tan(fovY / 2) * (-zNear);
-    float bottom = -top;
-    float right = top * aspect_ratio;
-    float left = -right;
-
-    Eigen::Matrix4f Mt;
-    Mt <<
-        1, 0, 0, -(right + left) / 2,
-        0, 1, 0, -(top + bottom) / 2,
-        0, 0, 1, -(zNear + zFar) / 2,
-        0, 0, 0, 1;
-
-    Eigen::Matrix4f Ms;
-    Ms <<
-        2 / (right - left), 0, 0, 0,
-        0, 2 / (top - left), 0, 0, 0,
-        0, 0, 2 / (zNear - zFar), 0,
-        0, 0, 0, 1;
-    return Ms * Mt * Mp * projection;
-
+    // TODO: Implement this function
+    // Create the projection matrix for the given parameters.
+    // Then return it.
+    Eigen::Matrix4f perspective;
+    perspective <<
+    zNear, 0, 0, 0,
+    0, zNear, 0, 0,
+    0, 0, zNear + zFar, -zNear * zFar,
+    0, 0, 1, 0;
+    Eigen::Matrix4f translate;
+    float t = tan(eye_fov / 180.0 / 2 * MY_PI) * (-zNear);
+    float b = -t;
+    float r = t / aspect_ratio;
+    float l = -r;
+    translate <<
+    1, 0, 0, -(r + l) / 2,
+    0, 1, 0, -(t + b) / 2,
+    0, 0, 1, -(zNear + zFar) / 2,
+    0, 0, 0, 1; 
+    Eigen::Matrix4f scale;
+    scale << 
+    2 / (r - l), 0, 0, 0,
+    0, 2 / (t - b), 0, 0,
+    0, 0, 2 / (zNear - zFar), 0,
+    0, 0, 0, 1;
+    projection = scale * translate * perspective * projection;
+    return projection;
 
 }
 
@@ -167,13 +167,20 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
     Eigen::Vector3f normal = payload.normal;
 
     Eigen::Vector3f result_color = {0, 0, 0};
+    
     for (auto& light : lights)
     {
-        // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
-        // components are. Then, accumulate that result on the *result_color* object.
+        Eigen::Vector3f l = (light.position - point).normalized();
+        Eigen::Vector3f v = (eye_pos - point).normalized();
+        Eigen::Vector3f h = (l + v).normalized();
+        Eigen::Vector3f I = light.intensity;
+        float r2 = (light.position - point).dot(light.position - point); 
+        Eigen::Vector3f La = ka.cwiseProduct(amb_light_intensity);
+        Eigen::Vector3f Ld = kd.cwiseProduct(I / r2) * std::max(0.0f, normal.dot(l));
+        Eigen::Vector3f Ls = ks.cwiseProduct(I / r2) * std::pow(std::max(0.0f, normal.dot(h)), p);
         
+        result_color += La + Ld + Ls;
     }
-
     return result_color * 255.f;
 }
 
