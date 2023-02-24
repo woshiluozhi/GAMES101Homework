@@ -210,6 +210,8 @@ inline Bounds3 Triangle::getBounds() { return Union(Bounds3(v0, v1), v2); }
 
 inline Intersection Triangle::getIntersection(Ray ray)
 {
+    
+
     Intersection inter;
 
     if (dotProduct(ray.direction, normal) > 0)
@@ -230,8 +232,25 @@ inline Intersection Triangle::getIntersection(Ray ray)
     if (v < 0 || u + v > 1)
         return inter;
     t_tmp = dotProduct(e2, qvec) * det_inv;
+    if (t_tmp < 0)
+    {
+      return inter;
+    }
 
     // TODO find ray triangle intersection
+    //● happened 是否相交
+    //● obj 相交的物体
+    //● distance 相交点离相机的距离
+    //● normal 三角形法向量
+    //● coords 相交点的坐标
+    //● m 相交点表面材质
+    inter.happened = true;
+    inter.coords = ray(t_tmp);
+    inter.normal = normal;
+    inter.distance = t_tmp;
+    inter.obj = this;
+    inter.m = this->m;
+    
 
 
 
