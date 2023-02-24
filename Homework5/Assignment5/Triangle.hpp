@@ -4,9 +4,17 @@
 
 #include <cstring>
 
+
 bool rayTriangleIntersect(const Vector3f& v0, const Vector3f& v1, const Vector3f& v2, const Vector3f& orig,
                           const Vector3f& dir, float& tnear, float& u, float& v)
 {
+    Vector3f E1 = v1 - v0, E2 = v2 - v0, S = orig - v0;
+    Vector3f S1 = crossProduct(dir, E2), S2 = crossProduct(S, E1);
+    float S1E1 = dotProduct(S1, E1);
+    tnear = 1.0 / S1E1 * dotProduct(S2, E2);
+    u = 1.0 / S1E1 * dotProduct(S1, S);
+    v = 1.0 / S1E1 * dotProduct(S2, dir);
+    return tnear > 0 && u >= 0 && u <= 1 && v >= 0 && v <= 1 && 1 - u - v >= 0 && 1 - u - v <= 1;
     // TODO: Implement this function that tests whether the triangle
     // that's specified bt v0, v1 and v2 intersects with the ray (whose
     // origin is *orig* and direction is *dir*)
